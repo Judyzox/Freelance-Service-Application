@@ -10,6 +10,8 @@ A web-based platform that connects clients and freelancers. Clients can post job
 - 📢 **Job Posting**: Clients can create jobs with budget, description, and deadline
 - 🔍 **Job Discovery**: Freelancers can browse available jobs and submit offers
 - ✅ **Offer Handling**: Clients can accept or reject freelancer offers and track project status
+- Responsive navigation
+- Clean and modern UI
 
 ---
 
@@ -32,25 +34,53 @@ A web-based platform that connects clients and freelancers. Clients can post job
 ---
 
 ## 📁 Project Structure
-1-frontend:
 frontend/
-├── public/                 # Static files
-├── src/                    # Source code
-│   ├── components/         # Reusable UI components
-│   ├── pages/             # Page components
-│   ├── context/           # React context providers
-│   ├── services/          # API and other services
-│   ├── App.js            # Main application component
-│   ├── App.css           # Main application styles
-│   └── index.js          # Application entry point
-├── package.json           # Project dependencies and scripts
-├── package-lock.json      # Dependency lock file
-├── Dockerfile            # Docker configuration
-└── README.md             # Project documentation
-src/
-├── assets/               # Images, fonts, and other static assets
-├── hooks/               # Custom React hooks
-├── utils/               # Utility functions and helpers
-├── constants/           # Constants and configuration
-├── types/               # TypeScript type definitions (if using TypeScript)
-└── styles/              # Global styles and theme configuration
+├── public/ # Static files
+├── src/ # Source code
+│ ├── components/ # Reusable UI components
+│ ├── pages/ # Page components
+│ ├── context/ # React context providers
+│ ├── services/ # API and other services
+│ ├── App.js # Main application component
+│ ├── App.css # Main application styles
+│ └── index.js # Application entry point
+├── package.json # Project dependencies and scripts
+├── package-lock.json # Dependency lock file
+├── Dockerfile # Docker configuration
+└── README.md # Project documentation
+---
+
+## Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+
+## Installation
+
+1. Clone the repository
+2. Install dependencies:
+```bash
+npm install
+```
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following content:
+REACT_APP_API_URL=http://localhost:5000/api
+
+## Running the Application
+
+To start the development server:
+```bash
+npm start
+```
+
+The application will be available at `http://localhost:3000`
+
+## Building for Production
+
+To create a production build:
+```bash
+npm run build
+```
+```
