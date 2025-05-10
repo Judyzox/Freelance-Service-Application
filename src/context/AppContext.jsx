@@ -1,27 +1,62 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Toast from '../components/Toast';
+import { getUserData } from '../services/api';
 
 const AppContext = createContext();
 
-export function AppProvider({ children }) {
-  const [loading, setLoading] = useState(false);
+export const AppProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
-  const [user, setUser] = useState(() => {
-    const u = localStorage.getItem('user');
-    return u ? JSON.parse(u) : null;
-  });
-  const [loggedIn, setLoggedIn] = useState(() => localStorage.getItem('loggedIn') === 'true');
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-      setLoggedIn(true);
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchUserData();
     } else {
-      localStorage.removeItem('user');
-      setLoggedIn(false);
+      setLoading(false);
     }
-  }, [user]);
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await getUserData();
+      setUser(response.data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch user data');
+      localStorage.removeItem('token');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = (userData, token) => {
+    localStorage.setItem('token', token);
+    setUser(userData);
+    setError(null);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setError(null);
+  };
+
+  const isAuthenticated = () => {
+    return !!localStorage.getItem('token');
+  };
+
+  const isClient = () => {
+    return user?.role === 'Client';
+  };
+
+  const isFreelancer = () => {
+    return user?.role === 'FreeLancer';
+  };
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -32,7 +67,21 @@ export function AppProvider({ children }) {
   };
 
   return (
-    <AppContext.Provider value={{ setLoading, showToast, user, setUser, loggedIn, setLoggedIn }}>
+    <AppContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        login,
+        logout,
+        isAuthenticated,
+        isClient,
+        isFreelancer,
+        fetchUserData,
+        showToast,
+        hideToast
+      }}
+    >
       {loading && <LoadingSpinner />}
       {toast && (
         <Toast
@@ -44,12 +93,12 @@ export function AppProvider({ children }) {
       {children}
     </AppContext.Provider>
   );
-}
+};
 
-export function useApp() {
+export const useApp = () => {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error('useApp must be used within an AppProvider');
   }
   return context;
-} 
+}; 

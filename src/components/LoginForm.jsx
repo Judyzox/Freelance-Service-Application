@@ -1,133 +1,104 @@
-import { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
+import { loginUser } from '../services/api';
 
-export default function LoginForm() {
-  const [form, setForm] = useState({ email: '', password: '', role: '' });
-  const { setLoading, showToast } = useApp();
+const LoginForm = () => {
   const navigate = useNavigate();
+  const { login, showToast } = useApp();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.role) {
-      showToast('Please select a role', 'error');
-      return;
-    }
     setLoading(true);
+
     try {
-      // Check against all users with the selected role
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const user = users.find(u => u.email === form.email && u.password === form.password && u.role === form.role);
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('loggedIn', 'true');
-        // Load profile for this user
-        const profile = JSON.parse(localStorage.getItem('profile') || '{}');
-        if (profile.userId !== user.userId) {
-          // If not matching, create a new profile for this user
-          const profileId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-          const newProfile = {
-            profileId,
-            userId: user.userId,
-            bio: '',
-            phone: '',
-            skills: '',
-            experience: '',
-          };
-          localStorage.setItem('profile', JSON.stringify(newProfile));
-        }
-        showToast('Login successful!', 'success');
-        if (user.role === 'client') {
-          navigate('/dashboard');
-        } else if (user.role === 'freelancer') {
-          navigate('/my-applications');
-        } else {
-          navigate('/');
-        }
+      const response = await loginUser(formData);
+      const { token, user } = response.data;
+      
+      login(user, token);
+      showToast('Login successful!', 'success');
+      
+      // Redirect based on user role
+      if (user.role === 'Client') {
+        navigate('/client-dashboard');
       } else {
-        showToast('Invalid email, password, or role', 'error');
+        navigate('/feed');
       }
     } catch (error) {
-      showToast('An error occurred during login', 'error');
+      const message = error.response?.data?.message || 'Login failed. Please try again.';
+      showToast(message, 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        Role
-        <select name="role" value={form.role} onChange={handleChange} required style={{ padding: '0.75rem', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '1rem' }}>
-          <option value="">Select role</option>
-          <option value="client">Client</option>
-          <option value="freelancer">Freelancer</option>
-        </select>
-      </label>
-      <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        Email
-        <input 
-          name="email" 
-          placeholder="Email" 
-          onChange={handleChange} 
-          required 
-          style={{
-            padding: '0.75rem',
-            borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-            fontSize: '1rem',
-            transition: 'border-color 0.2s',
-            ':focus': {
-              borderColor: '#0a66c2',
-              outline: 'none'
-            }
-          }}
-        />
-      </label>
-      <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        Password
-        <input 
-          name="password" 
-          type="password" 
-          placeholder="Password" 
-          onChange={handleChange} 
-          required 
-          style={{
-            padding: '0.75rem',
-            borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-            fontSize: '1rem',
-            transition: 'border-color 0.2s',
-            ':focus': {
-              borderColor: '#0a66c2',
-              outline: 'none'
-            }
-          }}
-        />
-      </label>
-      <button 
-        type="submit"
-        style={{
-          background: '#0a66c2',
-          color: 'white',
-          padding: '0.75rem',
-          borderRadius: '8px',
-          border: 'none',
-          fontSize: '1rem',
-          fontWeight: 600,
-          cursor: 'pointer',
-          transition: 'background-color 0.2s',
-          ':hover': {
-            background: '#004182'
-          }
-        }}
-      >
-        Sign In
-      </button>
-    </form>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
-} 
+};
+
+export default LoginForm; 

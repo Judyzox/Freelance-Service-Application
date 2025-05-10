@@ -1,156 +1,116 @@
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { logoutUser } from '../services/api';
 
-export default function Navbar() {
-  const { user, loggedIn, setUser, setLoggedIn, setLoading, showToast } = useApp();
+const Navbar = () => {
   const navigate = useNavigate();
+  const { user, logout, isAuthenticated, isClient, isFreelancer, showToast } = useApp();
 
   const handleLogout = async () => {
-    setLoading(true);
     try {
-      setUser(null);
-      setLoggedIn(false);
-      localStorage.removeItem('loggedIn');
-      localStorage.removeItem('profile');
-      localStorage.setItem('justLoggedOut', 'true');
+      await logoutUser();
+      logout();
       showToast('Logged out successfully', 'success');
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       showToast('Error logging out', 'error');
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <nav style={{ 
-      background: 'white', 
-      padding: '1rem 2rem',
-      boxShadow: '0 2px 8px rgba(10,102,194,0.07)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100
-    }}>
-      <ul style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        margin: 0, 
-        padding: 0, 
-        listStyle: 'none',
-        gap: '2rem'
-      }}>
-        <li>
-          <Link to="/" style={{ 
-            fontSize: '1.25rem', 
-            fontWeight: 'bold',
-            color: '#0a66c2',
-            textDecoration: 'none'
-          }}>
-            FreelanceHub
-          </Link>
-        </li>
-        {/* LOGGED OUT NAVBAR */}
-        {!loggedIn && (
-          <>
-            <li style={{ marginLeft: 'auto' }}>
-              <Link to="/" style={{ 
-                color: '#0a66c2',
-                textDecoration: 'none',
-                transition: 'color 0.2s'
-              }}>
+    <nav className="bg-white shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex">
+            <div className="flex-shrink-0 flex items-center">
+              <Link to="/" className="text-xl font-bold text-indigo-600">
+                Freelance Platform
+              </Link>
+            </div>
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <Link
+                to="/"
+                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
                 Home
               </Link>
-            </li>
-            <li>
-              <Link to="/register" style={{ 
-                color: '#0a66c2',
-                textDecoration: 'none',
-                transition: 'color 0.2s'
-              }}>
-                Register
-              </Link>
-            </li>
-            <li>
-              <Link to="/login" style={{ 
-                background: '#0a66c2',
-                color: 'white',
-                padding: '0.5rem 1rem',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                transition: 'background-color 0.2s'
-              }}>
-                Login
-              </Link>
-            </li>
-          </>
-        )}
-        {/* CLIENT NAVBAR */}
-        {loggedIn && user?.role === 'client' && (
-          <>
-            <li style={{ marginLeft: 'auto' }}>
-              <Link to="/feed" style={{ color: '#0a66c2', textDecoration: 'none', transition: 'color 0.2s' }}>Feed</Link>
-            </li>
-            <li>
-              <Link to="/post-job" style={{ color: '#0a66c2', textDecoration: 'none', transition: 'color 0.2s' }}>Post Job</Link>
-            </li>
-            <li>
-              <Link to="/dashboard" style={{ color: '#0a66c2', textDecoration: 'none', transition: 'color 0.2s' }}>Dashboard</Link>
-            </li>
-            <li>
-              <Link to="/applications" style={{ color: '#0a66c2', textDecoration: 'none', transition: 'color 0.2s' }}>Applications</Link>
-            </li>
-            <li>
-              <Link to="/profile" style={{ color: '#0a66c2', textDecoration: 'none', transition: 'color 0.2s' }}>Profile</Link>
-            </li>
-            <li>
-              <button 
-                onClick={handleLogout} 
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  color: '#0a66c2', 
-                  cursor: 'pointer', 
-                  fontWeight: 500, 
-                  transition: 'color 0.2s',
-                  fontSize: '1rem'
-                }}
-              >
-                Logout
-              </button>
-            </li>
-          </>
-        )}
-        {/* FREELANCER NAVBAR */}
-        {loggedIn && user?.role === 'freelancer' && (
-          <>
-            <li style={{ marginLeft: 'auto' }}>
-              <Link to="/feed" style={{ color: '#0a66c2', textDecoration: 'none', transition: 'color 0.2s' }}>Feed</Link>
-            </li>
-            <li>
-              <Link to="/my-applications" style={{ color: '#0a66c2', textDecoration: 'none', transition: 'color 0.2s' }}>My Applications</Link>
-            </li>
-            <li>
-              <Link to="/profile" style={{ color: '#0a66c2', textDecoration: 'none', transition: 'color 0.2s' }}>Profile</Link>
-            </li>
-            <li>
-              <button 
-                onClick={handleLogout} 
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  color: '#0a66c2', 
-                  cursor: 'pointer', 
-                  fontWeight: 500, 
-                  transition: 'color 0.2s',
-                  fontSize: '1rem'
-                }}
-              >
-                Logout
-              </button>
-            </li>
-          </>
-        )}
-      </ul>
+              {isAuthenticated() && (
+                <>
+                  {isClient() && (
+                    <>
+                      <Link
+                        to="/client-dashboard"
+                        className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        to="/post-job"
+                        className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                      >
+                        Post Job
+                      </Link>
+                    </>
+                  )}
+                  {isFreelancer() && (
+                    <>
+                      <Link
+                        to="/feed"
+                        className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                      >
+                        Job Feed
+                      </Link>
+                      <Link
+                        to="/my-applications"
+                        className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                      >
+                        My Applications
+                      </Link>
+                    </>
+                  )}
+                  <Link
+                    to="/profile"
+                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                  >
+                    Profile
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+            {isAuthenticated() ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-gray-700">{user?.email}</span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/login"
+                  className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </nav>
   );
-} 
+};
+
+export default Navbar; 

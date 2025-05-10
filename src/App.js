@@ -1,41 +1,132 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import Home from './pages/Home';
 import Navbar from './components/Navbar';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Home from './pages/Home';
 import Profile from './pages/Profile';
-import PostJob from './pages/PostJob';
-import Jobs from './pages/Jobs';
-import JobDetails from './pages/JobDetails';
 import ClientDashboard from './pages/ClientDashboard';
-import ApplyJob from './pages/ApplyJob';
+import PostJob from './pages/PostJob';
 import Feed from './pages/Feed';
-import Applications from './pages/Applications';
 import MyApplications from './pages/MyApplications';
+import JobDetails from './pages/JobDetails';
+import Applications from './pages/Applications';
+import ApplyJob from './pages/ApplyJob';
+import { useApp } from './context/AppContext';
 
-function App() {
+const ProtectedRoute = ({ children, roles }) => {
+  const { isAuthenticated, isClient, isFreelancer } = useApp();
+
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" />;
+  }
+
+  if (roles) {
+    if (roles.includes('Client') && !isClient()) {
+      return <Navigate to="/feed" />;
+    }
+    if (roles.includes('FreeLancer') && !isFreelancer()) {
+      return <Navigate to="/client-dashboard" />;
+    }
+  }
+
+  return children;
+};
+
+const AppRoutes = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      
+      {/* Protected Routes */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Client Routes */}
+      <Route
+        path="/client-dashboard"
+        element={
+          <ProtectedRoute roles={['Client']}>
+            <ClientDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/post-job"
+        element={
+          <ProtectedRoute roles={['Client']}>
+            <PostJob />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/applications/:jobId"
+        element={
+          <ProtectedRoute roles={['Client']}>
+            <Applications />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Freelancer Routes */}
+      <Route
+        path="/feed"
+        element={
+          <ProtectedRoute roles={['FreeLancer']}>
+            <Feed />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-applications"
+        element={
+          <ProtectedRoute roles={['FreeLancer']}>
+            <MyApplications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jobs/:jobId"
+        element={
+          <ProtectedRoute roles={['FreeLancer']}>
+            <JobDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/apply/:jobId"
+        element={
+          <ProtectedRoute roles={['FreeLancer']}>
+            <ApplyJob />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+};
+
+const App = () => {
   return (
     <AppProvider>
       <Router>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/post-job" element={<PostJob />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/jobs/:id" element={<JobDetails />} />
-          <Route path="/dashboard" element={<ClientDashboard />} />
-          <Route path="/apply/:jobId" element={<ApplyJob />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/applications" element={<Applications />} />
-          <Route path="/my-applications" element={<MyApplications />} />
-        </Routes>
+        <div className="min-h-screen bg-gray-50">
+          <Navbar />
+          <main className="container mx-auto px-4 py-8">
+            <AppRoutes />
+          </main>
+        </div>
       </Router>
     </AppProvider>
   );
-}
+};
 
 export default App; 
